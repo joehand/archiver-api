@@ -1,7 +1,7 @@
 {
   "name": "archiver-api",
   "version": "0.0.0",
-  "description": "",
+  "description": "Create a rest API for hypercore-archiver",
   "main": "index.js",
   "scripts": {
     "test": "standard && tape test.js | tap-spec",
