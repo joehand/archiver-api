@@ -1,10 +1,17 @@
-require('leaked-handles')
 var path = require('path')
 var test = require('tape')
 var nets = require('nets')
 var mkdirp = require('mkdirp')
 var rimraf = require('rimraf')
+var hyperdrive = require('hyperdrive')
+var memdb = require('memdb')
+var raf = require('random-access-file')
+var createSwarm = require('hyperdiscovery')
 var createServer = require('./server')
+
+var drive = hyperdrive(memdb())
+var archive = drive.createArchive({file: function (name) { return raf(name) }})
+var swarm = createSwarm(archive)
 
 var root = 'http://127.0.0.1:3000'
 var dir = path.join(__dirname, 'tmp')
@@ -13,13 +20,15 @@ var closeServer
 test('start server', function (t) {
   mkdirp.sync(dir)
   closeServer = createServer(dir, function () {
-    t.end()
+    archive.append('index.js', function () {
+      t.end()
+    })
   })
 })
 
 test('add', function (t) {
   var json = {
-    'key': '293c99d7f13c6be895b7ac8418190ab9fca50e6b60692baf44493ac898ee79b7'
+    'key': archive.key.toString('hex')
   }
   nets({url: root + '/add', method: 'POST', json: json}, function (err, resp, body) {
     t.ifErr(err)
@@ -41,7 +50,7 @@ test('status after add', function (t) {
 
 test('remove', function (t) {
   var json = {
-    'key': '293c99d7f13c6be895b7ac8418190ab9fca50e6b60692baf44493ac898ee79b7'
+    'key': archive.key.toString('hex')
   }
   nets({url: root + '/remove', method: 'POST', json: json}, function (err, resp, body) {
     t.ifErr(err)
@@ -62,6 +71,10 @@ test('status after remove', function (t) {
 
 test.onFinish(function () {
   closeServer(function () {
-    rimraf.sync(dir)
+    archive.close(function () {
+      swarm.close(function () {
+        rimraf.sync(dir)
+      })
+    })
   })
 })
