@@ -23,6 +23,7 @@
   "devDependencies": {
     "appa": "^6.0.0",
     "archiver-server": "^2.0.1",
+    "hypercore-archiver": "^2.3.0",
     "hyperdiscovery": "^1.0.1",
     "hyperdrive": "^7.12.1",
     "memdb": "^1.3.1",
