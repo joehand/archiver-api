@@ -25,7 +25,7 @@ ArchiverRest.prototype.add = function (req, res, ctx, cb) {
     if (!ctx.body || !ctx.body.key) return cb(new Error('Key required'), 400)
 
     var key = ctx.body.key
-    debug('adding archive:', key)
+    debug('Adding Archive:', key)
     self.archiver.add(key, function (err) {
       if (err) console.error(err)
     })
@@ -40,7 +40,7 @@ ArchiverRest.prototype.remove = function (req, res, ctx, cb) {
     if (!ctx.body || !ctx.body.key) return cb(new Error('Key required'), 400)
 
     var key = ctx.body.key
-    debug('removing archive:', key)
+    debug('Removing Archive:', key)
     self.archiver.remove(key, function (err) {
       if (err) console.error(err)
     })
@@ -78,5 +78,5 @@ ArchiverRest.prototype.status = function (req, res, ctx, cb) {
 }
 
 ArchiverRest.prototype._onArchived = function (key) {
-  debug('archive completed', key.toString('hex'))
+  debug('Archive Completed', key.toString('hex'))
 }
