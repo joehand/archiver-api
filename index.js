@@ -37,10 +37,18 @@ ArchiverRest.prototype.add = function (req, res, ctx, cb) {
 ArchiverRest.prototype.remove = function (req, res, ctx, cb) {
   var self = this
   if (req.method === 'POST') {
-    // TODO
+    if (!ctx.body || !ctx.body.key) return cb(new Error('Key required'), 400)
+
+    var key = ctx.body.key
+    debug('removing archive:', key)
+    self.archiver.remove(key, function (err) {
+      if (err) console.error(err)
+    })
+    return cb(null, 200, {key: key})
   } else if (req.method === 'DELETE') {
-    if (!/^[0-9a-f]{64}$/.test(req.url)) return cb(new Error('Archive key must be in URL'), 400)
+    if (!/[0-9a-f]{64}$/.test(req.url)) return cb(new Error('Archive key must be in URL'), 400)
     // TODO
+    return cb(new Error('method not implemented'), 501)
   }
   return cb(new Error('Method not allowed'), 405)
 }
@@ -48,10 +56,17 @@ ArchiverRest.prototype.remove = function (req, res, ctx, cb) {
 ArchiverRest.prototype.status = function (req, res, ctx, cb) {
   if (req.method !== 'GET') return cb(new Error('Method not allowed'), 405)
   var self = this
-  var cnt = 0
-  self.archiver.list().on('data', ondata).on('end', reply).on('error', function (err) {
-    console.error(err)
-  })
+  if (/[0-9a-f]{64}$/.test(req.url)) {
+    // Single Archive status
+    // TODO
+    return cb(new Error('method not implemented'), 501)
+  } else {
+    // General Status
+    var cnt = 0
+    self.archiver.list().on('data', ondata).on('end', reply).on('error', function (err) {
+      console.error(err)
+    })
+  }
 
   function ondata () {
     cnt++
@@ -63,6 +78,5 @@ ArchiverRest.prototype.status = function (req, res, ctx, cb) {
 }
 
 ArchiverRest.prototype._onArchived = function (key) {
-  var self = this
-  debug('archive completed', key)
+  debug('archive completed', key.toString('hex'))
 }

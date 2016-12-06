@@ -1,21 +1,22 @@
 {
-  "name": "hypercore-archiver-rest",
-  "version": "1.0.0",
+  "name": "archiver-api",
+  "version": "0.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "standard && tape test/*.js | tap-spec"
+    "test": "standard && tape test.js | tap-spec",
+    "start": "DEBUG=archiver-api node cli.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/joehand/hypercore-archiver-rest.git"
+    "url": "git+https://github.com/joehand/archiver-api.git"
   },
   "author": "Joe Hand <joe@hand.email> (https://joeahand.com/)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/joehand/hypercore-archiver-rest/issues"
+    "url": "https://github.com/joehand/archiver-api/issues"
   },
-  "homepage": "https://github.com/joehand/hypercore-archiver-rest#readme",
+  "homepage": "https://github.com/joehand/archiver-api#readme",
   "dependencies": {
     "appa": "^6.0.0",
     "archiver-server": "^2.0.0"
