@@ -1,0 +1,28 @@
+{
+  "name": "hypercore-archiver-rest",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "standard && tape test/*.js | tap-spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joehand/hypercore-archiver-rest.git"
+  },
+  "author": "Joe Hand <joe@hand.email> (https://joeahand.com/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/joehand/hypercore-archiver-rest/issues"
+  },
+  "homepage": "https://github.com/joehand/hypercore-archiver-rest#readme",
+  "dependencies": {
+    "appa": "^6.0.0",
+    "archiver-server": "^2.0.0"
+  },
+  "devDependencies": {
+    "debug": "^2.3.3",
+    "nets": "^3.2.0",
+    "tape": "^4.6.3"
+  }
+}
