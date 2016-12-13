@@ -58,17 +58,7 @@ ArchiverRest.prototype.status = function (req, res, ctx, cb) {
   var self = this
   if (/[0-9a-f]{64}$/.test(req.url)) {
     // Single Archive status
-    var match = /(?:[a-z]+:\/\/(?:dat\.land\/)?)?([^/]{64})/.exec(req.url)
-    if (!match) return cb(new Error('Invalid key'), 404)
-
-    var key = match[1]
-    self._getArchiveStatus(key, function (err, status) {
-      if (err) {
-        debug('Archive Status Error', err)
-        return cb(new Error('Error getting archive status'), 500)
-      }
-      return cb(null, 200, status)
-    })
+    return self.archiveProgress(req, res, ctx, cb)
   } else {
     // General Status
     var cnt = 0
@@ -88,10 +78,11 @@ ArchiverRest.prototype.status = function (req, res, ctx, cb) {
 
 ArchiverRest.prototype.archiveProgress = function (req, res, ctx, cb) {
   var self = this
-  if (req.method === 'POST') {
-    if (!ctx.body || !ctx.body.key) return cb(new Error('Key required'), 400)
+  if (req.method === 'GET') {
+    var match = /(?:[a-z]+:\/\/(?:dat\.land\/)?)?([^/]{64})/.exec(req.url)
+    if (!match) return cb(new Error('Invalid key'), 404)
 
-    var key = ctx.body.key
+    var key = match[1]
     self._getArchiveStatus(key, function (err, status) {
       if (err) {
         debug('Archive Status Error', err)

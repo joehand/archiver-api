@@ -35,7 +35,7 @@ module.exports = function (dir, opts, cb) {
     })
   })
 
-  app.on('/progress', function (req, res, ctx) {
+  app.on('/progress/:key', function (req, res, ctx) {
     api.archiveProgress(req, res, ctx, function (err, code, data) {
       if (err) return app.error(res, code, err.message)
       app.send(code, data).pipe(res)

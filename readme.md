@@ -65,16 +65,11 @@ Remove an archive from the archiver. Pass `req`, `res` from your http server. Re
 
 Get the archiver status. Currently returns `{archives: count}` where `count` is number of archives in the archiver.
 
-If `req.url` contains a key, then archiver will return the status for that key: `{progress: 0.5}`, where `progress` is the download progress.
+If `req.url` contains a key, then archiver will return the status for that key: `{progress: 0.5}`, where `progress` is the download progress, same as `api.archiveProgress()`.
 
 ### `api.archiveProgress(req, res, ctx, cb)`
 
-Add an archive to the archiver. Pass `req`, `res` from your http server. Request should be a POST request.
-
-`ctx` should be an object with:
-
-* `body` (Object) - the POST JSON body as a parsed Object
-* `body.key` (String) - archive key
+Get progress for an archive. Pass `req`, `res` from your http server. Key must be in the URL.
 
 API will respond with a archive progress object: `{progress: 0.5}`, where progress is the percentage of blocks done.
 

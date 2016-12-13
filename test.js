@@ -49,7 +49,7 @@ test('status after add', function (t) {
   })
 })
 
-test('archive status after add via GET', function (t) {
+test('archive status after', function (t) {
   nets({url: root + '/status/' + key, method: 'GET'}, function (err, resp, body) {
     t.ifErr(err)
     t.same(resp.statusCode, 200, '200 status')
@@ -59,14 +59,12 @@ test('archive status after add via GET', function (t) {
   })
 })
 
-test('archive progress after add via POST', function (t) {
-  var json = {
-    'key': key
-  }
-  nets({url: root + '/progress', method: 'POST', json: json}, function (err, resp, body) {
+test('archive progress after', function (t) {
+  nets({url: root + '/progress/' + key, method: 'GET'}, function (err, resp, body) {
     t.ifErr(err)
     t.same(resp.statusCode, 200, '200 status')
-    t.same(body.progress, 1, 'progress is 1 = done')
+    var status = JSON.parse(body)
+    t.same(status.progress, 1, 'progress is 1 = done')
     t.end()
   })
 })
