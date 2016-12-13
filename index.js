@@ -86,6 +86,24 @@ ArchiverRest.prototype.status = function (req, res, ctx, cb) {
   }
 }
 
+ArchiverRest.prototype.archiveProgress = function (req, res, ctx, cb) {
+  var self = this
+  if (req.method === 'POST') {
+    if (!ctx.body || !ctx.body.key) return cb(new Error('Key required'), 400)
+
+    var key = ctx.body.key
+    self._getArchiveStatus(key, function (err, status) {
+      if (err) {
+        debug('Archive Status Error', err)
+        return cb(new Error('Error getting archive status'), 500)
+      }
+      return cb(null, 200, status)
+    })
+  } else {
+    return cb(new Error('Method not allowed'), 405)
+  }
+}
+
 ArchiverRest.prototype._getArchiveStatus = function (key, cb) {
   var self = this
   self.archiver.get(key, function (err, feed, content) {
