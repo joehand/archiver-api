@@ -58,8 +58,17 @@ ArchiverRest.prototype.status = function (req, res, ctx, cb) {
   var self = this
   if (/[0-9a-f]{64}$/.test(req.url)) {
     // Single Archive status
-    // TODO
-    return cb(new Error('method not implemented'), 501)
+    var match = /(?:[a-z]+:\/\/(?:dat\.land\/)?)?([^/]{64})/.exec(req.url)
+    if (!match) return cb(new Error('Invalid key'), 404)
+
+    var key = match[1]
+    self._getArchiveStatus(key, function (err, status) {
+      if (err) {
+        debug('Archive Status Error', err)
+        return cb(new Error('Error getting archive status'), 500)
+      }
+      return cb(null, 200, status)
+    })
   } else {
     // General Status
     var cnt = 0
@@ -74,6 +83,28 @@ ArchiverRest.prototype.status = function (req, res, ctx, cb) {
 
   function reply () {
     return cb(null, 200, { archives: cnt })
+  }
+}
+
+ArchiverRest.prototype._getArchiveStatus = function (key, cb) {
+  var self = this
+  self.archiver.get(key, function (err, feed, content) {
+    if (err) return cb(err)
+    if (!content) content = {blocks: 0}
+    var need = feed.blocks + content.blocks
+    var have = need - blocksRemain(feed) - blocksRemain(content)
+    debug('Archive Status', key)
+    debug('need:', need, 'have:', have, 'progress', have / need)
+    return cb(null, { progress: have / need })
+  })
+
+  function blocksRemain (feed) {
+    if (!feed.bitfield) return 0
+    var remaining = 0
+    for (var i = 0; i < this.blocks; i++) {
+      if (!this.bitfield.get(i)) remaining++
+    }
+    return remaining
   }
 }
 

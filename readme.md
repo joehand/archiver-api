@@ -72,12 +72,12 @@ Get the archiver status. Currently returns `{archives: count}` where `count` is 
 * Add
 * Remove via POST
 * General Status
+* Archive Progress
 
 #### TODO:
 
 * Remove via DELETE
-* Archive Status
-* Progress
+* Archive status (peers, history, etc.)
 * Associate archive with user/email 
 
 ## Example with Archiver-Server

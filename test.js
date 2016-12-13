@@ -16,6 +16,7 @@ var swarm = createSwarm(archive)
 var root = 'http://127.0.0.1:3000'
 var dir = path.join(__dirname, 'tmp')
 var closeServer
+var key = archive.key.toString('hex')
 
 test('start server', function (t) {
   mkdirp.sync(dir)
@@ -28,7 +29,7 @@ test('start server', function (t) {
 
 test('add', function (t) {
   var json = {
-    'key': archive.key.toString('hex')
+    'key': key
   }
   nets({url: root + '/add', method: 'POST', json: json}, function (err, resp, body) {
     t.ifErr(err)
@@ -44,6 +45,16 @@ test('status after add', function (t) {
     t.same(resp.statusCode, 200, '200 status')
     var status = JSON.parse(body)
     t.same(status.archives, 1, '1 archive in status')
+    t.end()
+  })
+})
+
+test('archive status after add', function (t) {
+  nets({url: root + '/status/' + key, method: 'GET'}, function (err, resp, body) {
+    t.ifErr(err)
+    t.same(resp.statusCode, 200, '200 status')
+    var status = JSON.parse(body)
+    t.same(status.progress, 1, 'progress is 1 = done')
     t.end()
   })
 })

@@ -42,6 +42,13 @@ module.exports = function (dir, opts, cb) {
     })
   })
 
+  app.on('/status/:key', function (req, res, ctx) {
+    api.status(req, res, ctx, function (err, code, data) {
+      if (err) return app.error(res, code, err.message)
+      app.send(code, data).pipe(res)
+    })
+  })
+
   apiServer.listen(3000, function () {
     console.log('api server started at http://127.0.0.1:3000')
     cb(null)
