@@ -110,8 +110,8 @@ ArchiverRest.prototype._getArchiveStatus = function (key, cb) {
   function blocksRemain (feed) {
     if (!feed.bitfield) return 0
     var remaining = 0
-    for (var i = 0; i < this.blocks; i++) {
-      if (!this.bitfield.get(i)) remaining++
+    for (var i = 0; i < feed.blocks; i++) {
+      if (!feed.bitfield.get(i)) remaining++
     }
     return remaining
   }
