@@ -59,14 +59,26 @@ test('archive status after', function (t) {
   })
 })
 
-test('archive progress after', function (t) {
-  nets({url: root + '/progress/' + key, method: 'GET'}, function (err, resp, body) {
-    t.ifErr(err)
-    t.same(resp.statusCode, 200, '200 status')
-    var status = JSON.parse(body)
-    t.same(status.progress, 1, 'progress is 1 = done')
-    t.end()
-  })
+test('check archive status and wait till synced', function (t) {
+  var to = setTimeout(function () {
+    throw new Error('Archive did not sync')
+  }, 5e3)
+  var i = setInterval(function () {
+    nets({url: root + '/progress/' + key, json: true}, function (err, res, body) {
+      t.ifErr(err)
+      t.equals(res.statusCode, 200, '200 status')
+      t.ok(body.progress)
+
+      if (body.progress === 1) {
+        clearInterval(i)
+        clearTimeout(to)
+        console.log('synced!')
+        t.end()
+      } else {
+        console.log('progress', body.progress * 100, '%')
+      }
+    })
+  }, 300)
 })
 
 test('remove', function (t) {
