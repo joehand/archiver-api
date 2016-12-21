@@ -86,6 +86,7 @@ ArchiverRest.prototype.archiveProgress = function (req, res, ctx, cb) {
     var key = match[1]
     self._getArchiveStatus(key, function (err, status) {
       if (err) {
+        if (err.notFound) return cb(new Error('Archive not found'), 404)
         debug('Archive Status Error', err)
         return cb(new Error('Error getting archive status'), 500)
       }
