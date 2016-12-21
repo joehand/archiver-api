@@ -1,5 +1,6 @@
 var assert = require('assert')
 var debug = require('debug')('archiver-api')
+var URL = require('url')
 
 module.exports = ArchiverRest
 
@@ -46,7 +47,7 @@ ArchiverRest.prototype.remove = function (req, res, ctx, cb) {
     })
     return cb(null, 200, {key: key})
   } else if (req.method === 'DELETE') {
-    if (!/[0-9a-f]{64}$/.test(req.url)) return cb(new Error('Archive key must be in URL'), 400)
+    if (isDatUrl(req)) return cb(new Error('Archive key must be in URL'), 400)
     // TODO
     return cb(new Error('method not implemented'), 501)
   }
@@ -56,7 +57,7 @@ ArchiverRest.prototype.remove = function (req, res, ctx, cb) {
 ArchiverRest.prototype.status = function (req, res, ctx, cb) {
   if (req.method !== 'GET') return cb(new Error('Method not allowed'), 405)
   var self = this
-  if (/[0-9a-f]{64}$/.test(req.url)) {
+  if (isDatUrl(req)) {
     // Single Archive status
     return self.archiveProgress(req, res, ctx, cb)
   } else {
@@ -79,12 +80,13 @@ ArchiverRest.prototype.status = function (req, res, ctx, cb) {
 ArchiverRest.prototype.archiveProgress = function (req, res, ctx, cb) {
   var self = this
   if (req.method === 'GET') {
-    var match = /(?:[a-z]+:\/\/(?:dat\.land\/)?)?([^/]{64})/.exec(req.url)
+    var match = matchPath(req, /\/(?:[a-z]+:\/\/(?:dat\.land\/)?)?([^/]{64})/)
     if (!match) return cb(new Error('Invalid key'), 404)
 
     var key = match[1]
     self._getArchiveStatus(key, function (err, status) {
       if (err) {
+        if (err.notFound) return cb(new Error('Archive not found'), 404)
         debug('Archive Status Error', err)
         return cb(new Error('Error getting archive status'), 500)
       }
@@ -119,4 +121,13 @@ ArchiverRest.prototype._getArchiveStatus = function (key, cb) {
 
 ArchiverRest.prototype._onArchived = function (key) {
   debug('Archive Completed', key.toString('hex'))
+}
+
+function matchPath (req, regex) {
+  var urlp = URL.parse(req.url)
+  return regex.exec(urlp.pathname)
+}
+
+function isDatUrl (req) {
+  return !!matchPath(req, /\/[0-9a-f]{64}$/)
 }
