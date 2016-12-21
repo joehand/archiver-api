@@ -1,6 +1,6 @@
 var assert = require('assert')
 var debug = require('debug')('archiver-api')
-var { parse } = require('url')
+var URL = require('url')
 
 module.exports = ArchiverRest
 
@@ -124,10 +124,10 @@ ArchiverRest.prototype._onArchived = function (key) {
 }
 
 function matchPath (req, regex) {
-  var urlp = parse(req.url)
+  var urlp = URL.parse(req.url)
   return regex.exec(urlp.pathname)
 }
 
 function isDatUrl (req) {
-  return !!matchPath(req, /^\/[0-9a-f]{64}$/)
+  return !!matchPath(req, /\/[0-9a-f]{64}$/)
 }
