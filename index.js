@@ -2,6 +2,8 @@ var assert = require('assert')
 var debug = require('debug')('archiver-api')
 var URL = require('url')
 
+const DEFAULT_TIMEOUT = 5e3 // 5 seconds
+
 module.exports = ArchiverRest
 
 function ArchiverRest (archiver, opts) {
@@ -9,6 +11,7 @@ function ArchiverRest (archiver, opts) {
 
   assert.ok(archiver, 'Archiver required')
   opts = opts || {}
+  opts.timeout = (opts.timeout && typeof opts.timeout === 'number') ? opts.timeout : DEFAULT_TIMEOUT
 
   var self = this
 
@@ -87,6 +90,7 @@ ArchiverRest.prototype.archiveProgress = function (req, res, ctx, cb) {
     self._getArchiveStatus(key, function (err, status) {
       if (err) {
         if (err.notFound) return cb(new Error('Archive not found'), 404)
+        if (err.timedOut) return cb(err, 408)
         debug('Archive Status Error', err)
         return cb(new Error('Error getting archive status'), 500)
       }
@@ -99,7 +103,11 @@ ArchiverRest.prototype.archiveProgress = function (req, res, ctx, cb) {
 
 ArchiverRest.prototype._getArchiveStatus = function (key, cb) {
   var self = this
+  var to = setTimeout(onTimeout, this.options.timeout)
+  var didTimeout = false
   self.archiver.get(key, function (err, feed, content) {
+    clearTimeout(to)
+    if (didTimeout) return
     if (err) return cb(err)
     if (!content) content = {blocks: 0}
     var need = feed.blocks + content.blocks
@@ -108,6 +116,13 @@ ArchiverRest.prototype._getArchiveStatus = function (key, cb) {
     debug('need:', need, 'have:', have, 'progress', have / need)
     return cb(null, { progress: have / need })
   })
+
+  function onTimeout () {
+    didTimeout = true
+    var err = new Error('Timed out while searching for archive')
+    err.timedOut = true
+    cb(err)
+  }
 
   function blocksRemain (feed) {
     if (!feed.bitfield) return 0
