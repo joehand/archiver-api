@@ -26,7 +26,7 @@ var app = appa()
 var apiServer = http.createServer(app)
 
 app.on('/add', function (req, res, ctx) {
-  api.add(req, res, ctx, function (err, code, data) {
+  api.add(ctx.body, function (err, code, data) {
     if (err) return app.error(res, code, err.message)
     app.send(code, data).pipe(res)
   })
@@ -41,35 +41,29 @@ app.on('/add', function (req, res, ctx) {
 
 `archiver` is a `hypercore-archiver` instance.
 
-### `api.add(req, res, ctx, cb)`
+### `api.add(opts, cb)`
 
-Add an archive to the archiver. Pass `req`, `res` from your http server. Request should be a POST request.
+Add an archive to the archiver. `opts` should be an object with:
 
-`ctx` should be an object with:
-
-* `body` (Object) - the POST JSON body as a parsed Object
-* `body.key` (String) - archive key
+* `opts.key` (String) - archive key
 
 **Note: To add an archive, you need to connect to it on the Dat Network. [archiver-server](https://github.com/joehand/archiver-server) does this for you but you can also use discovery-swarm or discovery-channel directly**
 
-### `api.remove(req, res, ctx, cb)`
+### `api.remove(opts, cb)`
 
-Remove an archive from the archiver. Pass `req`, `res` from your http server. Request should be a POST request.
+Remove an archive from the archiver.
 
-`ctx` should be an object with:
+`opts` should be an object with:
 
-* `body` (Object) - the POST JSON body as a parsed Object
-* `body.key` (String) - archive key
+* `opts.key` (String) - archive key
 
-### `api.status(req, res, ctx, cb)`
+### `api.status(cb)`
 
 Get the archiver status. Currently returns `{archives: count}` where `count` is number of archives in the archiver.
 
-If `req.url` contains a key, then archiver will return the status for that key: `{progress: 0.5}`, where `progress` is the download progress, same as `api.archiveProgress()`.
+### `api.archiveProgress(key, cb)`
 
-### `api.archiveProgress(req, res, ctx, cb)`
-
-Get progress for an archive. Pass `req`, `res` from your http server. Key must be in the URL.
+Get progress for an archive.
 
 API will respond with a archive progress object: `{progress: 0.5}`, where progress is the percentage of blocks done.
 

@@ -1,6 +1,5 @@
 var assert = require('assert')
 var debug = require('debug')('archiver-api')
-var URL = require('url')
 
 const DEFAULT_TIMEOUT = 5e3 // 5 seconds
 
@@ -23,53 +22,35 @@ function ArchiverRest (archiver, opts) {
   return self
 }
 
-ArchiverRest.prototype.add = function (req, res, ctx, cb) {
+ArchiverRest.prototype.add = function (opts, cb) {
   var self = this
-  if (req.method === 'POST') {
-    if (!ctx.body || !ctx.body.key) return cb(new Error('Key required'), 400)
+  if (!opts || !opts.key) return cb(new Error('Key required'), 400)
 
-    var key = ctx.body.key
-    debug('Adding Archive:', key)
-    self.archiver.add(key, function (err) {
-      if (err) console.error(err)
-    })
-    return cb(null, 201, {key: key})
-  }
-  return cb(new Error('Method not allowed'), 405)
+  var key = opts.key
+  debug('Adding Archive:', key)
+  self.archiver.add(key, function (err) {
+    if (err) console.error(err)
+  })
+  return cb(null, 201, {key: key})
 }
 
-ArchiverRest.prototype.remove = function (req, res, ctx, cb) {
+ArchiverRest.prototype.remove = function (opts, cb) {
   var self = this
-  if (req.method === 'POST') {
-    if (!ctx.body || !ctx.body.key) return cb(new Error('Key required'), 400)
+  if (!opts || !opts.key) return cb(new Error('Key required'), 400)
 
-    var key = ctx.body.key
-    debug('Removing Archive:', key)
-    self.archiver.remove(key, function (err) {
-      if (err) console.error(err)
-    })
-    return cb(null, 200, {key: key})
-  } else if (req.method === 'DELETE') {
-    if (isDatUrl(req)) return cb(new Error('Archive key must be in URL'), 400)
-    // TODO
-    return cb(new Error('method not implemented'), 501)
-  }
-  return cb(new Error('Method not allowed'), 405)
+  var key = opts.key
+  debug('Removing Archive:', key)
+  self.archiver.remove(key, function (err) {
+    if (err) console.error(err)
+  })
+  return cb(null, 200, {key: key})
 }
 
-ArchiverRest.prototype.status = function (req, res, ctx, cb) {
-  if (req.method !== 'GET') return cb(new Error('Method not allowed'), 405)
-  var self = this
-  if (isDatUrl(req)) {
-    // Single Archive status
-    return self.archiveProgress(req, res, ctx, cb)
-  } else {
-    // General Status
-    var cnt = 0
-    self.archiver.list().on('data', ondata).on('end', reply).on('error', function (err) {
-      console.error(err)
-    })
-  }
+ArchiverRest.prototype.status = function (cb) {
+  var cnt = 0
+  this.archiver.list().on('data', ondata).on('end', reply).on('error', function (err) {
+    console.error(err)
+  })
 
   function ondata () {
     cnt++
@@ -80,31 +61,23 @@ ArchiverRest.prototype.status = function (req, res, ctx, cb) {
   }
 }
 
-ArchiverRest.prototype.archiveProgress = function (req, res, ctx, cb) {
-  var self = this
-  if (req.method === 'GET') {
-    var match = matchPath(req, /\/(?:[a-z]+:\/\/(?:dat\.land\/)?)?([^/]{64})/)
-    if (!match) return cb(new Error('Invalid key'), 404)
-
-    var key = match[1]
-    self._getArchiveStatus(key, function (err, status) {
-      if (err) {
-        if (err.notFound) return cb(new Error('Archive not found'), 404)
-        if (err.timedOut) return cb(err, 408)
-        debug('Archive Status Error', err)
-        return cb(new Error('Error getting archive status'), 500)
-      }
-      return cb(null, 200, status)
-    })
-  } else {
-    return cb(new Error('Method not allowed'), 405)
-  }
+ArchiverRest.prototype.archiveProgress = function (key, cb) {
+  this._getArchiveStatus(key, function (err, status) {
+    if (err) {
+      if (err.notFound) return cb(new Error('Archive not found'), 404)
+      if (err.timedOut) return cb(err, 408)
+      debug('Archive Status Error', err)
+      return cb(new Error('Error getting archive status'), 500)
+    }
+    return cb(null, 200, status)
+  })
 }
 
 ArchiverRest.prototype._getArchiveStatus = function (key, cb) {
   var self = this
   var to = setTimeout(onTimeout, this.options.timeout)
   var didTimeout = false
+  if (typeof key === 'string') key = new Buffer(key, 'hex')
   self.archiver.get(key, function (err, feed, content) {
     clearTimeout(to)
     if (didTimeout) return
@@ -136,13 +109,4 @@ ArchiverRest.prototype._getArchiveStatus = function (key, cb) {
 
 ArchiverRest.prototype._onArchived = function (key) {
   debug('Archive Completed', key.toString('hex'))
-}
-
-function matchPath (req, regex) {
-  var urlp = URL.parse(req.url)
-  return regex.exec(urlp.pathname)
-}
-
-function isDatUrl (req) {
-  return !!matchPath(req, /\/[0-9a-f]{64}$/)
 }
