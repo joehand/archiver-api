@@ -5,6 +5,8 @@ var DatServer = require('archiver-server')
 var appa = require('appa')
 var Api = require('.')
 
+var DAT_KEY_REGEX = /\/([0-9a-f]{64})/i
+
 module.exports = function (dir, opts, cb) {
   assert.equal(typeof dir, 'string', 'directory required')
   if (typeof opts === 'function') {
@@ -22,35 +24,65 @@ module.exports = function (dir, opts, cb) {
   var archiveServer = http.createServer(datServer.httpRequest)
 
   app.on('/add', function (req, res, ctx) {
-    api.add(req, res, ctx, function (err, code, data) {
+    if (req.method !== 'POST') {
+      return app.error(405, 'Method not allowed').pipe(res)
+    }
+    api.add(ctx.body, function (err, code, data) {
       if (err) return app.error(code, err.message).pipe(res)
       app.send(code, data).pipe(res)
     })
   })
 
   app.on('/remove', function (req, res, ctx) {
-    api.remove(req, res, ctx, function (err, code, data) {
+    if (req.method !== 'POST') {
+      return app.error(405, 'Method not allowed').pipe(res)
+    }
+    api.remove(ctx.body, function (err, code, data) {
       if (err) return app.error(code, err.message).pipe(res)
       app.send(code, data).pipe(res)
     })
   })
 
   app.on('/progress/:key', function (req, res, ctx) {
-    api.archiveProgress(req, res, ctx, function (err, code, data) {
+    if (req.method !== 'GET') {
+      return app.error(405, 'Method not allowed').pipe(res)
+    }
+
+    var keyMatch = DAT_KEY_REGEX.exec(req.url)
+    if (!keyMatch) {
+      return app.error(404, 'Not found').pipe(res)
+    }
+    var key = keyMatch[1]
+
+    api.archiveProgress(key, function (err, code, data) {
       if (err) return app.error(code, err.message).pipe(res)
       app.send(code, data).pipe(res)
     })
   })
 
   app.on('/status', function (req, res, ctx) {
-    api.status(req, res, ctx, function (err, code, data) {
+    if (req.method !== 'GET') {
+      return app.error(405, 'Method not allowed').pipe(res)
+    }
+
+    api.status(function (err, code, data) {
       if (err) return app.error(code, err.message).pipe(res)
       app.send(code, data).pipe(res)
     })
   })
 
   app.on('/status/:key', function (req, res, ctx) {
-    api.status(req, res, ctx, function (err, code, data) {
+    if (req.method !== 'GET') {
+      return app.error(405, 'Method not allowed').pipe(res)
+    }
+
+    var keyMatch = DAT_KEY_REGEX.exec(req.url)
+    if (!keyMatch) {
+      return app.error(404, 'Not found').pipe(res)
+    }
+    var key = keyMatch[1]
+
+    api.archiveProgress(key, function (err, code, data) {
       if (err) return app.error(code, err.message).pipe(res)
       app.send(code, data).pipe(res)
     })
