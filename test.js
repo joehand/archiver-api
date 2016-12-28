@@ -49,16 +49,6 @@ test('status after add', function (t) {
   })
 })
 
-test('archive status after', function (t) {
-  nets({url: root + '/status/' + key, method: 'GET'}, function (err, resp, body) {
-    t.ifErr(err)
-    t.same(resp.statusCode, 200, '200 status')
-    var status = JSON.parse(body)
-    t.ok(status.progress, 'progress okay')
-    t.end()
-  })
-})
-
 test('check archive status and wait till synced', function (t) {
   var to = setTimeout(function () {
     throw new Error('Archive did not sync')
@@ -67,7 +57,6 @@ test('check archive status and wait till synced', function (t) {
     nets({url: root + '/progress/' + key, json: true}, function (err, res, body) {
       t.ifErr(err)
       t.equals(res.statusCode, 200, '200 status')
-      t.ok(body.progress)
 
       if (body.progress === 1) {
         clearInterval(i)
