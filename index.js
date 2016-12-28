@@ -78,15 +78,15 @@ ArchiverRest.prototype._getArchiveStatus = function (key, cb) {
   var to = setTimeout(onTimeout, this.options.timeout)
   var didTimeout = false
   if (typeof key === 'string') key = new Buffer(key, 'hex')
-  self.archiver.get(key, function (err, feed, content) {
+  self.archiver.get(key, function (err, meta, content) {
     clearTimeout(to)
     if (didTimeout) return
     if (err) return cb(err)
-    if (!content) content = {blocks: 0}
-    var need = feed.blocks + content.blocks
-    var have = need - blocksRemain(feed) - blocksRemain(content)
-    debug('Archive Status', key)
-    debug('need:', need, 'have:', have, 'progress', have / need)
+    if (!meta || !content) {
+      return cb(null, { progress: 0 })
+    }
+    var need = meta.blocks + content.blocks
+    var have = blocksDownloaded(meta) + blocksDownloaded(content)
     return cb(null, { progress: have / need })
   })
 
@@ -97,13 +97,13 @@ ArchiverRest.prototype._getArchiveStatus = function (key, cb) {
     cb(err)
   }
 
-  function blocksRemain (feed) {
+  function blocksDownloaded (feed) {
     if (!feed.bitfield) return 0
-    var remaining = 0
+    var downloaded = 0
     for (var i = 0; i < feed.blocks; i++) {
-      if (!feed.bitfield.get(i)) remaining++
+      if (feed.bitfield.get(i)) downloaded++
     }
-    return remaining
+    return downloaded
   }
 }
 
