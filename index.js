@@ -82,7 +82,7 @@ ArchiverRest.prototype._getArchiveStatus = function (key, cb) {
     clearTimeout(to)
     if (didTimeout) return
     if (err) return cb(err)
-    if (!meta || !content) {
+    if (!meta || !meta.blocks || !content || !content.blocks) {
       return cb(null, { progress: 0 })
     }
     var need = meta.blocks + content.blocks
